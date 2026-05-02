@@ -51,20 +51,20 @@ fun GameScreen(
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
-        // 2. Voile mauve nuit assombri pour garder la lisibilité de la grille
-        //    et du texte. Plus dense en haut/bas, plus transparent au milieu
-        //    où la photo dialogue avec la grille.
+        // 2. Voile mauve nuit léger : laisse la photo respirer pleinement
+        //    tout en assombrissant juste assez pour que le texte du header
+        //    et la zone du bouton restent lisibles.
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            NuitProfonde.copy(alpha = 0.85f),
-                            NuitProfonde.copy(alpha = 0.55f),
-                            MauveNuit.copy(alpha = 0.45f),
-                            NuitProfonde.copy(alpha = 0.75f),
-                            NuitProfonde.copy(alpha = 0.92f)
+                            NuitProfonde.copy(alpha = 0.50f),
+                            NuitProfonde.copy(alpha = 0.20f),
+                            MauveNuit.copy(alpha = 0.10f),
+                            NuitProfonde.copy(alpha = 0.30f),
+                            NuitProfonde.copy(alpha = 0.55f)
                         )
                     )
                 )
