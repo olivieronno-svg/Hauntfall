@@ -33,6 +33,7 @@ fun GameScreen(
     viewModel: GameViewModel = viewModel()
 ) {
     val grid by viewModel.grid.collectAsState()
+    val score by viewModel.score.collectAsState()
 
     Column(
         modifier = Modifier
@@ -58,9 +59,10 @@ fun GameScreen(
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "Score : —",
+                text = "Score : $score",
                 color = Ectoplasme,
-                fontSize = 14.sp
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
             )
         }
 
