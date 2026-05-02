@@ -58,10 +58,15 @@ class GameViewModel : ViewModel() {
         //    fusion +2 net force le joueur à fusionner activement)
         val withSpawn = SpawnEngine.spawnRandom(fusionResult.grid, ids, count = 2)
 
-        // 4. Mise à jour de l'état + check game over
-        _grid.value = withSpawn
-        _score.value = _score.value + fusionResult.scoreGained
-        _gameOver.value = GameOverDetector.isGameOver(withSpawn)
+        // 4. Stabilisation : un spawn peut créer un groupe de 3+ s'il atterrit
+        //    près de doublons existants. Sans ce passage, les groupes s'accumulent
+        //    sur la grille et le détecteur de game over est faussé.
+        val stabilized = FusionEngine.stabilize(withSpawn, ids)
+
+        // 5. Mise à jour de l'état + check game over
+        _grid.value = stabilized.grid
+        _score.value = _score.value + fusionResult.scoreGained + stabilized.scoreGained
+        _gameOver.value = GameOverDetector.isGameOver(stabilized.grid)
     }
 
     fun reset() {
@@ -92,6 +97,8 @@ class GameViewModel : ViewModel() {
                 }
             }
         }
-        return grid
+        // Stabilisation : si la randomisation a créé un groupe de 3+ (rare mais
+        // possible), on fusionne avant de présenter la grille au joueur.
+        return FusionEngine.stabilize(grid, ids).grid
     }
 }

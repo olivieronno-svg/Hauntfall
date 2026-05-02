@@ -113,6 +113,43 @@ object FusionEngine {
     }
 
     /**
+     * Stabilise la grille : scanne TOUTES les positions et déclenche une fusion
+     * sur tout groupe connexe de 3+ items du même type non-final, jusqu'à ce
+     * que plus aucune fusion ne soit possible.
+     *
+     * Utilisé après les spawns aléatoires : un nouvel item peut atterrir au
+     * milieu d'un cluster existant et créer un groupe de 3+. Sans stabilisation
+     * post-spawn, ces groupes s'accumulent et faussent le détecteur de game over.
+     */
+    fun stabilize(grid: Grid, ids: ItemIdSource): FusionResult {
+        var current = grid
+        var totalScore = 0
+        val events = mutableListOf<FusionEvent>()
+
+        while (true) {
+            var pivot: GridPos? = null
+            outer@ for (r in 0 until current.rows) {
+                for (c in 0 until current.cols) {
+                    val pos = GridPos(r, c)
+                    val item = current[pos] ?: continue
+                    if (item.type.isFinalTier) continue
+                    if (connectedSameType(current, pos, item.type).size >= 3) {
+                        pivot = pos
+                        break@outer
+                    }
+                }
+            }
+            val p = pivot ?: break
+            val result = applyAt(current, p, ids)
+            current = result.grid
+            totalScore += result.scoreGained
+            events += result.fusions
+        }
+
+        return FusionResult(current, totalScore, events)
+    }
+
+    /**
      * Composante connexe orthogonale d'items de type [type] contenant [start].
      * Si [start] n'est pas du bon type, renvoie un ensemble vide.
      */
