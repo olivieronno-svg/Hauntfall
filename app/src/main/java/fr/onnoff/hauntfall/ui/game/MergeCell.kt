@@ -75,7 +75,7 @@ fun MergeCell(
         // Emoji central (visuel principal)
         Text(
             text = visual.emoji,
-            fontSize = if (isElevated) 32.sp else 28.sp
+            fontSize = if (isElevated) 36.sp else 32.sp
         )
 
         // Badge palier en haut à droite

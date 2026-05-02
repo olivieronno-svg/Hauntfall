@@ -53,8 +53,10 @@ class GameViewModel : ViewModel() {
             ids = ids
         )
 
-        // 3. Spawn d'1 nouvel item (pas spawn si fusion a déjà rempli toutes les cases libres)
-        val withSpawn = SpawnEngine.spawnRandom(fusionResult.grid, ids, count = 1)
+        // 3. Spawn de 2 nouveaux items pour densifier la grille (rend le game
+        //    over atteignable : fusion 3-group + spawn 2 = 0 net, mais sans
+        //    fusion +2 net force le joueur à fusionner activement)
+        val withSpawn = SpawnEngine.spawnRandom(fusionResult.grid, ids, count = 2)
 
         // 4. Mise à jour de l'état + check game over
         _grid.value = withSpawn

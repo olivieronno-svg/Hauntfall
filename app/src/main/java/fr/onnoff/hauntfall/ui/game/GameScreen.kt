@@ -1,6 +1,7 @@
 package fr.onnoff.hauntfall.ui.game
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,6 +19,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -86,8 +89,8 @@ fun GameScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Légende des paliers
-            TierLegend()
+            // Légende ladder : la chaîne de fusion visible
+            TierLadder()
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -111,27 +114,57 @@ fun GameScreen(
     }
 }
 
+/**
+ * Affiche la chaîne de fusion sous la grille : 5 cartes (une par palier)
+ * séparées par des flèches → pour montrer clairement la progression
+ * 🕯 → 🏮 → 👻 → 🔮 → 💎.
+ */
 @Composable
-private fun TierLegend() {
+private fun TierLadder() {
+    val types = fr.onnoff.hauntfall.game.model.ItemType.entries
     Row(
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        fr.onnoff.hauntfall.game.model.ItemType.entries.forEach { type ->
-            val v = ItemVisual.of(type)
-            Row(verticalAlignment = Alignment.CenterVertically) {
+        types.forEachIndexed { i, type ->
+            TierBadge(type)
+            if (i < types.size - 1) {
                 Text(
-                    text = v.emoji,
-                    fontSize = 14.sp
-                )
-                Text(
-                    text = v.tierLabel,
-                    color = v.borderColor,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(start = 2.dp, end = 4.dp)
+                    text = "›",
+                    color = OrManoir.copy(alpha = 0.7f),
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun TierBadge(type: fr.onnoff.hauntfall.game.model.ItemType) {
+    val v = ItemVisual.of(type)
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .clip(RoundedCornerShape(10.dp))
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(v.bgColor, v.bgColor.copy(alpha = 0.85f))
+                )
+            )
+            .border(1.dp, v.borderColor, RoundedCornerShape(10.dp))
+            .padding(horizontal = 8.dp, vertical = 6.dp)
+    ) {
+        Text(
+            text = v.emoji,
+            fontSize = 24.sp
+        )
+        Text(
+            text = v.tierLabel,
+            color = v.labelColor,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
