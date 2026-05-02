@@ -1,5 +1,6 @@
 package fr.onnoff.hauntfall.ui.game
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -21,10 +22,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import fr.onnoff.hauntfall.R
 import fr.onnoff.hauntfall.ui.theme.Ectoplasme
 import fr.onnoff.hauntfall.ui.theme.MauveNuit
 import fr.onnoff.hauntfall.ui.theme.NuitProfonde
@@ -40,14 +44,35 @@ fun GameScreen(
     val gameOver by viewModel.gameOver.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Column(
+        // 1. Photo de fond : manoir hanté
+        Image(
+            painter = painterResource(id = R.drawable.bg_manor),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+        // 2. Voile mauve nuit assombri pour garder la lisibilité de la grille
+        //    et du texte. Plus dense en haut/bas, plus transparent au milieu
+        //    où la photo dialogue avec la grille.
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(NuitProfonde, MauveNuit, NuitProfonde)
+                        colors = listOf(
+                            NuitProfonde.copy(alpha = 0.85f),
+                            NuitProfonde.copy(alpha = 0.55f),
+                            MauveNuit.copy(alpha = 0.45f),
+                            NuitProfonde.copy(alpha = 0.75f),
+                            NuitProfonde.copy(alpha = 0.92f)
+                        )
                     )
                 )
+        )
+        // 3. Contenu de jeu par-dessus
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
                 .padding(horizontal = 16.dp, vertical = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
