@@ -2,6 +2,7 @@ package fr.onnoff.hauntfall.ui.game
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,7 +18,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -34,67 +34,78 @@ fun GameScreen(
 ) {
     val grid by viewModel.grid.collectAsState()
     val score by viewModel.score.collectAsState()
+    val gameOver by viewModel.gameOver.collectAsState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(NuitProfonde, MauveNuit, NuitProfonde)
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(NuitProfonde, MauveNuit, NuitProfonde)
+                    )
                 )
-            )
-            .padding(horizontal = 16.dp, vertical = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // Header
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .padding(horizontal = 16.dp, vertical = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Hauntfall",
+                    color = OrManoir,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Score : $score",
+                    color = Ectoplasme,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
             Text(
-                text = "Hauntfall",
-                color = OrManoir,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold
+                text = "Glisse les items pour les déplacer",
+                color = PoussiereSpectrale,
+                fontSize = 12.sp
             )
-            Text(
-                text = "Score : $score",
-                color = Ectoplasme,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Grille de jeu
+            MergeGrid(
+                grid = grid,
+                onMove = viewModel::onMove
             )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Légende des paliers
+            TierLegend()
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            OutlinedButton(
+                onClick = viewModel::reset
+            ) {
+                Text(
+                    text = "Nouvelle partie",
+                    color = OrManoir
+                )
+            }
         }
 
-        Spacer(modifier = Modifier.height(4.dp))
-
-        Text(
-            text = "Glisse les items pour les déplacer",
-            color = PoussiereSpectrale,
-            fontSize = 12.sp
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // Grille de jeu
-        MergeGrid(
-            grid = grid,
-            onMove = viewModel::onMove
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // Légende des paliers
-        TierLegend()
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        OutlinedButton(
-            onClick = viewModel::reset
-        ) {
-            Text(
-                text = "Nouvelle partie",
-                color = OrManoir
+        // Overlay fin de partie (par-dessus tout)
+        if (gameOver) {
+            GameOverOverlay(
+                score = score,
+                onReplay = viewModel::reset
             )
         }
     }
