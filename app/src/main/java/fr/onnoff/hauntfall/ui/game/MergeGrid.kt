@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,6 +44,9 @@ import fr.onnoff.hauntfall.ui.theme.OrManoir
  * - Pendant le drag, la case source est rendue vide et un overlay
  *   flottant (le même `MergeCell`) suit le doigt avec une légère
  *   élévation visuelle.
+ * - `rememberUpdatedState` + lecture fraîche de `gridSizePx` à l'intérieur
+ *   du coroutine `pointerInput` évitent le bug de "stale closure" : sans ça,
+ *   la lambda capture la taille initiale (zéro) et le drag ne démarre jamais.
  */
 @Composable
 fun MergeGrid(
@@ -55,18 +59,13 @@ fun MergeGrid(
     var dragFrom by remember { mutableStateOf<GridPos?>(null) }
     var dragPosPx by remember { mutableStateOf(Offset.Zero) }
 
+    // Évitent les captures stale dans le coroutine pointerInput.
+    val currentGrid by rememberUpdatedState(grid)
+    val currentOnMove by rememberUpdatedState(onMove)
+
+    // Pour le rendu (recompose à chaque changement) : OK d'utiliser des locals.
     val cellWidthPx = if (gridSizePx.width > 0) gridSizePx.width.toFloat() / grid.cols else 0f
     val cellHeightPx = if (gridSizePx.height > 0) gridSizePx.height.toFloat() / grid.rows else 0f
-
-    fun offsetToCell(o: Offset): GridPos? {
-        if (cellWidthPx <= 0f || cellHeightPx <= 0f) return null
-        if (o.x < 0f || o.y < 0f) return null
-        if (o.x >= gridSizePx.width || o.y >= gridSizePx.height) return null
-        val r = (o.y / cellHeightPx).toInt()
-        val c = (o.x / cellWidthPx).toInt()
-        val pos = GridPos(r, c)
-        return if (grid.isInBounds(pos)) pos else null
-    }
 
     Box(
         modifier = modifier
@@ -77,11 +76,20 @@ fun MergeGrid(
             .border(1.5.dp, OrManoir.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
             .padding(4.dp)
             .onSizeChanged { gridSizePx = it }
-            .pointerInput(grid.rows, grid.cols) {
+            .pointerInput(Unit) {
                 detectDragGestures(
                     onDragStart = { offset ->
-                        val pos = offsetToCell(offset)
-                        if (pos != null && grid[pos] != null) {
+                        val sz = gridSizePx
+                        if (sz.width <= 0 || sz.height <= 0) return@detectDragGestures
+                        val cellW = sz.width.toFloat() / currentGrid.cols
+                        val cellH = sz.height.toFloat() / currentGrid.rows
+                        if (offset.x < 0f || offset.y < 0f) return@detectDragGestures
+                        if (offset.x >= sz.width || offset.y >= sz.height) return@detectDragGestures
+                        val pos = GridPos(
+                            (offset.y / cellH).toInt(),
+                            (offset.x / cellW).toInt()
+                        )
+                        if (currentGrid.isInBounds(pos) && currentGrid[pos] != null) {
                             dragFrom = pos
                             dragPosPx = offset
                         }
@@ -95,9 +103,22 @@ fun MergeGrid(
                     onDragEnd = {
                         val from = dragFrom
                         if (from != null) {
-                            val to = offsetToCell(dragPosPx)
-                            if (to != null && to != from) {
-                                onMove(from, to)
+                            val sz = gridSizePx
+                            if (sz.width > 0 && sz.height > 0) {
+                                val cellW = sz.width.toFloat() / currentGrid.cols
+                                val cellH = sz.height.toFloat() / currentGrid.rows
+                                val o = dragPosPx
+                                if (o.x >= 0f && o.x < sz.width.toFloat() &&
+                                    o.y >= 0f && o.y < sz.height.toFloat()
+                                ) {
+                                    val to = GridPos(
+                                        (o.y / cellH).toInt(),
+                                        (o.x / cellW).toInt()
+                                    )
+                                    if (currentGrid.isInBounds(to) && to != from) {
+                                        currentOnMove(from, to)
+                                    }
+                                }
                             }
                         }
                         dragFrom = null
