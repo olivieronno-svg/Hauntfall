@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
@@ -44,11 +45,17 @@ fun GameScreen(
     val gameOver by viewModel.gameOver.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // 1. Photo de fond : manoir hanté
+        // 1. Photo de fond : manoir hanté.
+        //    BiasAlignment décale le crop vers la gauche (horizontalBias = -0.6f)
+        //    pour révéler le fantôme blanc du premier plan et la sorcière à
+        //    l'arrière-plan, qui sont autrement coupés par un crop centré.
+        //    verticalBias légèrement positif (0.15f) descend un peu la vue
+        //    pour mettre les fantômes à hauteur de la grille.
         Image(
             painter = painterResource(id = R.drawable.bg_manor),
             contentDescription = null,
             contentScale = ContentScale.Crop,
+            alignment = BiasAlignment(horizontalBias = -0.6f, verticalBias = 0.15f),
             modifier = Modifier.fillMaxSize()
         )
         // 2. Voile mauve nuit léger : laisse la photo respirer pleinement
