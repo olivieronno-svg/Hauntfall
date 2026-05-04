@@ -24,12 +24,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import fr.onnoff.hauntfall.R
+import hauntfall.composeapp.generated.resources.Res
+import hauntfall.composeapp.generated.resources.bg_manor
+import org.jetbrains.compose.resources.painterResource
 import fr.onnoff.hauntfall.ui.theme.Ectoplasme
 import fr.onnoff.hauntfall.ui.theme.MauveNuit
 import fr.onnoff.hauntfall.ui.theme.NuitProfonde
@@ -52,7 +53,7 @@ fun GameScreen(
         //    verticalBias légèrement positif (0.15f) descend un peu la vue
         //    pour mettre les fantômes à hauteur de la grille.
         Image(
-            painter = painterResource(id = R.drawable.bg_manor),
+            painter = painterResource(Res.drawable.bg_manor),
             contentDescription = null,
             contentScale = ContentScale.Crop,
             alignment = BiasAlignment(horizontalBias = -0.6f, verticalBias = 0.15f),
