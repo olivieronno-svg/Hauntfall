@@ -1,0 +1,81 @@
+workflows:
+  ios-testflight:
+    name: iOS — Build & TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+
+    # Lie l'API Key App Store Connect configurée dans
+    # Codemagic > Teams > Integrations > App Store Connect.
+    # Le name doit matcher exactement.
+    integrations:
+      app_store_connect: Hauntfall AppStore Key
+
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: fr.onnoff.hauntfall
+      vars:
+        BUNDLE_ID: "fr.onnoff.hauntfall"
+        XCODE_PROJECT: "iosApp/iosApp.xcodeproj"
+        XCODE_SCHEME: "iosApp"
+      xcode: latest
+
+    scripts:
+      - name: Install xcodegen
+        script: |
+          brew install xcodegen
+
+      - name: Generate Xcode project from project.yml
+        script: |
+          cd iosApp
+          xcodegen generate
+
+      - name: Set up signing certificates
+        script: |
+          xcode-project use-profiles
+
+      - name: Bump build number from TestFlight
+        script: |
+          BUILD_NUMBER=$(($(app-store-connect get-latest-testflight-build-number "$BUNDLE_ID" 2>/dev/null || echo 0) + 1))
+          echo "Setting build number to $BUILD_NUMBER"
+          cd iosApp
+          agvtool new-version -all $BUILD_NUMBER
+
+      - name: Build iOS IPA
+        script: |
+          xcode-project build-ipa \
+            --project "$XCODE_PROJECT" \
+            --scheme "$XCODE_SCHEME" \
+            --config "Release"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - composeApp/build/bin/iosArm64/podReleaseFramework/**
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        # Test après 1ère soumission validée :
+        # submit_to_app_store: false  # à passer à true quand la fiche App Store est complète
+
+  android-debug:
+    name: Android — Debug APK
+    instance_type: linux_x2
+    max_build_duration: 30
+    environment:
+      android_signing:
+        - default
+      vars:
+        PACKAGE_NAME: "fr.onnoff.hauntfall"
+      java: 17
+    scripts:
+      - name: Set Android SDK location
+        script: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/local.properties"
+      - name: Build debug APK
+        script: |
+          ./gradlew :composeApp:assembleDebug
+    artifacts:
+      - composeApp/build/outputs/apk/debug/*.apk
